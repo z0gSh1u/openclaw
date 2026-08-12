@@ -16,6 +16,7 @@ import {
 function shouldEmitSlackReactionNotification(params: {
   ctx: SlackMonitorContext;
   event: SlackReactionEvent;
+  eventScope?: SlackEventScope;
   actorName?: string;
 }) {
   const { ctx, event, actorName } = params;
@@ -32,9 +33,11 @@ function shouldEmitSlackReactionNotification(params: {
     }
     return allowListMatches({
       allowList,
+      teamId: params.eventScope?.teamId ?? ctx.teamId,
       id: event.user,
       name: actorName,
       allowNameMatching: ctx.allowNameMatching,
+      allowUnscoped: ctx.installationIdentity?.kind !== "enterprise",
     });
   }
   return ctx.reactionMode === "all";
@@ -91,6 +94,7 @@ export function registerSlackReactionEvents(params: {
         !shouldEmitSlackReactionNotification({
           ctx,
           event,
+          eventScope,
           actorName: actorInfo?.name,
         })
       ) {
