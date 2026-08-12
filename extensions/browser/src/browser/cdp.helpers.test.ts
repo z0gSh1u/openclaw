@@ -1,6 +1,7 @@
 // Browser tests cover cdp.helpers plugin behavior.
 import { MAX_TIMER_TIMEOUT_MS } from "openclaw/plugin-sdk/number-runtime";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { LookupFn } from "../infra/net/ssrf.js";
 import {
   assertChromeMcpCdpTransportAllowed,
   resolveCdpReachabilityPolicy,
@@ -14,6 +15,10 @@ const PROFILE_WS_REACHABILITY_MIN_TIMEOUT_MS = 200;
 const PROFILE_WS_REACHABILITY_MAX_TIMEOUT_MS = 2000;
 
 const fetchWithSsrFGuardMock = vi.hoisted(() => vi.fn());
+
+function createLookupFn(address: string): LookupFn {
+  return vi.fn(async () => [{ address, family: 4 }]) as unknown as LookupFn;
+}
 
 vi.mock("openclaw/plugin-sdk/ssrf-runtime", async (importOriginal) => {
   const actual = await importOriginal<typeof import("openclaw/plugin-sdk/ssrf-runtime")>();
@@ -167,7 +172,7 @@ describe("cdp helpers", () => {
     await expect(
       resolvePinnedHostnameWithPolicy("browser.example", {
         policy: scoped,
-        lookupFn: async () => [{ address: "10.0.0.8", family: 4 }],
+        lookupFn: createLookupFn("10.0.0.8"),
       }),
     ).rejects.toThrow(/private\/internal\/special-use ip address/i);
   });
@@ -188,7 +193,7 @@ describe("cdp helpers", () => {
     await expect(
       resolvePinnedHostnameWithPolicy("browser.example", {
         policy: scoped,
-        lookupFn: async () => [{ address: "10.0.0.8", family: 4 }],
+        lookupFn: createLookupFn("10.0.0.8"),
       }),
     ).resolves.toEqual(expect.objectContaining({ addresses: ["10.0.0.8"] }));
   });
