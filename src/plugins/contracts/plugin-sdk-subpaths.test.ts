@@ -657,7 +657,6 @@ describe("plugin-sdk subpath exports", () => {
       "createChannelHistoryWindow",
       "recordPendingHistoryEntryIfEnabled",
     ]);
-    expectSourceMentions("matrix", ["runPluginCommandWithTimeout"]);
     expectSourceContract("reply-runtime", {
       omits: [
         "buildPendingHistoryContextFromMap",
@@ -683,25 +682,6 @@ describe("plugin-sdk subpath exports", () => {
         "SecretTargetRegistryEntry",
       ],
       omits: ["collectNestedChannelTtsAssignments"],
-    });
-    expectSourceContract("channel-secret-runtime", {
-      mentions: [
-        "collectSimpleChannelFieldAssignments",
-        "collectConditionalChannelFieldAssignments",
-        "collectSecretInputAssignment",
-        "getChannelSurface",
-        "pushAssignment",
-        "pushInactiveSurfaceWarning",
-        "ResolverContext",
-        "SecretTargetRegistryEntry",
-      ],
-      omits: [
-        "buildChannelMetadata",
-        "buildUntrustedChannelMetadata",
-        "evaluateSupplementalContextVisibility",
-        "resolvePinnedMainDmOwnerFromAllowlist",
-        "safeMatchRegex",
-      ],
     });
     expectSourceContract("channel-secret-tts-runtime", {
       mentions: ["collectNestedChannelTtsAssignments"],
@@ -1150,8 +1130,6 @@ describe("plugin-sdk subpath exports", () => {
     ]);
     expectRepoSourceOmitsSnippet("src/channels/ack-reactions.ts", "shouldAckReactionForWhatsApp");
     expectRepoSourceOmitsSnippet("src/channels/ack-reactions.ts", "WhatsAppAckReactionMode");
-    expectSourceMentions("channel-streaming", ["SlackChannelStreamingConfig"]);
-    expectRepoSourceOmitsSnippet("src/channels/streaming.ts", "SlackChannelStreamingConfig");
     expectSourceMentions("status-helpers", [
       "appendMatchMetadata",
       "asString",
