@@ -15,6 +15,7 @@ import {
   resetSystemEventsForTest,
 } from "openclaw/plugin-sdk/system-event-runtime";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { SlackSystemEventAuthRetryError } from "./auth.js";
 import type { SlackMonitorContext } from "./context.js";
 import { registerSlackMemberEvents } from "./events/members.js";
 import { registerSlackPinEvents } from "./events/pins.js";
@@ -513,8 +514,8 @@ describe("Slack durable ingress", () => {
         let userLookupCount = 0;
         const resolveUserName = async () => {
           userLookupCount += 1;
-          if (userLookupCount === 2) {
-            throw new Error("users.info temporarily unavailable");
+          if (userLookupCount === 1) {
+            throw new SlackSystemEventAuthRetryError("users.info temporarily unavailable");
           }
           return { name: "alice" };
         };
