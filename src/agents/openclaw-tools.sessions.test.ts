@@ -2222,6 +2222,7 @@ describe("sessions tools", () => {
           sessions: [
             {
               key: targetKey,
+              agentId: "main",
               deliveryContext: {
                 channel: "whatsapp",
                 to: "123@g.us",
