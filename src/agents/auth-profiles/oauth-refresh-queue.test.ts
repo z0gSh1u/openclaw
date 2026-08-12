@@ -25,7 +25,7 @@ import { clearRuntimeAuthProfileStoreSnapshots } from "./runtime-snapshots.js";
 import { ensureAuthProfileStore, saveAuthProfileStore } from "./store.js";
 
 const {
-  refreshProviderOAuthCredentialWithPluginMock,
+  resolveProviderOAuthCredentialWithPluginMock,
   formatProviderAuthProfileApiKeyWithPluginMock,
 } = getOAuthProviderRuntimeMocks();
 
@@ -47,7 +47,7 @@ describe("OAuth refresh in-process queue", () => {
   beforeEach(async () => {
     resetFileLockStateForTest();
     resetOAuthProviderRuntimeMocks({
-      refreshProviderOAuthCredentialWithPluginMock,
+      resolveProviderOAuthCredentialWithPluginMock,
       formatProviderAuthProfileApiKeyWithPluginMock,
     });
     clearRuntimeAuthProfileStoreSnapshots();
@@ -73,7 +73,7 @@ describe("OAuth refresh in-process queue", () => {
     saveAuthProfileStore(createExpiredOauthStore({ profileId, provider }), agentDir);
 
     let callCount = 0;
-    refreshProviderOAuthCredentialWithPluginMock.mockImplementation(async () => {
+    resolveProviderOAuthCredentialWithPluginMock.mockImplementation(async () => {
       callCount += 1;
       if (callCount === 1) {
         throw new Error("simulated upstream failure");
@@ -126,7 +126,7 @@ describe("OAuth refresh in-process queue", () => {
     let inFlight = 0;
     let maxInFlight = 0;
     let seq = 0;
-    refreshProviderOAuthCredentialWithPluginMock.mockImplementation(async () => {
+    resolveProviderOAuthCredentialWithPluginMock.mockImplementation(async () => {
       const n = ++seq;
       startOrder.push(n);
       inFlight += 1;
