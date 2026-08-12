@@ -470,17 +470,28 @@ export async function auditListCommand(
       );
     }
     const decisionLimit = parseAuditDecisionLimit(options.limit);
-    const result = await queryAuditRunInspection({
-      ...(executionId
-        ? { executionId }
+    const cursor = options.cursor;
+    const numericCursor = cursor?.trim();
+    const runExecutionCursor =
+      numericCursor &&
+      /^[1-9]\d*$/.test(numericCursor) &&
+      Number.isSafeInteger(Number(numericCursor))
+        ? cursor
+        : undefined;
+    const decisionPage = {
+      decisionLimit,
+      ...(cursor ? { decisionCursor: cursor } : {}),
+    };
+    const result = await queryAuditRunInspection(
+      executionId
+        ? { executionId, ...decisionPage }
         : {
             runId: runId!,
             executionLimit: Math.min(decisionLimit, MAX_AUDIT_EXECUTION_LIMIT),
-            ...(options.cursor ? { executionCursor: options.cursor } : {}),
-          }),
-      decisionLimit,
-      ...(options.cursor ? { decisionCursor: options.cursor } : {}),
-    });
+            ...(runExecutionCursor ? { executionCursor: runExecutionCursor } : {}),
+            ...decisionPage,
+          },
+    );
     if (options.json) {
       writeRuntimeJson(runtime, result);
       return;

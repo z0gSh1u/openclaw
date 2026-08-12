@@ -815,6 +815,7 @@ function terminalApprovalReceiptMetadataRows(params: {
   runId: string;
   nowMs: number;
   after?: OperatorApprovalReceiptCursor;
+  offset?: number;
   limit: number;
 }): OperatorApprovalReceiptMetadataRow[] {
   const boundary = params.after
@@ -845,6 +846,7 @@ function terminalApprovalReceiptMetadataRows(params: {
     )
     .orderBy("operator_approvals.resolved_at_ms", "asc")
     .orderBy("operator_approvals.approval_id", "asc")
+    .$if(params.offset !== undefined, (query) => query.offset(params.offset!))
     .limit(params.limit);
   const metadata = (query: typeof ordered) =>
     query
@@ -983,6 +985,7 @@ export function summarizeOperatorApprovalReceiptsForRun(params: {
   context: OperatorApprovalReceiptContext;
   nowMs?: number;
   databaseOptions?: OpenClawStateDatabaseOptions;
+  exactCount?: boolean;
 }): {
   count: number;
   coverageState?: "enforced" | "unknown";
@@ -1001,13 +1004,21 @@ export function summarizeOperatorApprovalReceiptsForRun(params: {
         nowMs: params.nowMs ?? Date.now(),
         limit: OPERATOR_APPROVAL_RECEIPT_SUMMARY_MAX_ROWS + 1,
       });
-      const count = metadataRows.length;
-      if (count === 0) {
+      const boundedCount = metadataRows.length;
+      const count = params.exactCount
+        ? (executeSqliteQueryTakeFirstSync(
+            db,
+            terminalApprovalsForRunQuery(stateDb, params.context.runId, params.nowMs ?? Date.now())
+              .clearSelect()
+              .select((eb) => eb.fn.countAll<number>().as("count")),
+          )?.count ?? 0)
+        : boundedCount;
+      if (boundedCount === 0) {
         return { count: 0, missingEvidence: [] };
       }
       // Whole-set coverage stays conservative without decoding an unbounded
       // collection on the Gateway event loop.
-      if (count > OPERATOR_APPROVAL_RECEIPT_SUMMARY_MAX_ROWS) {
+      if (boundedCount > OPERATOR_APPROVAL_RECEIPT_SUMMARY_MAX_ROWS) {
         return {
           count,
           coverageState: "unknown" as const,
@@ -1059,6 +1070,7 @@ export function summarizeOperatorApprovalReceiptsForRun(params: {
 export function pageOperatorApprovalReceiptsForRun(params: {
   context: OperatorApprovalReceiptContext;
   after?: OperatorApprovalReceiptCursor;
+  offset?: number;
   limit: number;
   nowMs?: number;
   databaseOptions?: OpenClawStateDatabaseOptions;
@@ -1075,6 +1087,7 @@ export function pageOperatorApprovalReceiptsForRun(params: {
         runId: params.context.runId,
         nowMs: params.nowMs ?? Date.now(),
         after: params.after,
+        offset: params.offset,
         limit: params.limit + 1,
       });
       const pageMetadata = metadataRows.slice(0, params.limit);
