@@ -9,7 +9,10 @@ import {
   createPreparedModelCatalogWorkerInput,
   runPreparedModelCatalogWorker,
 } from "./prepared-model-catalog-worker.js";
-import { setPreparedModelRuntimeAuthMaterializations } from "./prepared-model-runtime-auth.js";
+import {
+  setPreparedModelRuntimeAuthMaterializations,
+  setPreparedModelRuntimeAuthStore,
+} from "./prepared-model-runtime-auth.js";
 import {
   PreparedModelRuntimePublicationSupersededError,
   toPreparedModelRuntimeError,
@@ -182,7 +185,6 @@ function createSnapshot(
     ...(input.inheritedAuthDir ? { inheritedAuthDir: input.inheritedAuthDir } : {}),
     ...(input.workspaceDir ? { workspaceDir: input.workspaceDir } : {}),
     config: input.config,
-    authStore: agentFacts.authStore,
     authModes: resolveUsableAgentCredentialModes(credentials),
     metadataSnapshot: pluginMetadataSnapshot,
     allowGatewaySubagentBinding: input.allowGatewaySubagentBinding === true,
@@ -195,6 +197,7 @@ function createSnapshot(
     inlineProviderModels,
     createStores,
   });
+  setPreparedModelRuntimeAuthStore(snapshot, agentFacts.authStore);
   setPreparedModelRuntimeAuthMaterializations(
     snapshot,
     Object.freeze([...getPreparedRuntimeAuthMaterializations(input.agentDir)]),
