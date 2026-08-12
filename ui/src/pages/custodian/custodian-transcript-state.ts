@@ -122,6 +122,7 @@ export abstract class CustodianTranscriptState {
         at: Date.now(),
         question,
         step,
+        structuredResponse: null,
       },
     ];
   }
